@@ -1,5 +1,6 @@
 package com.github.vladimir_bukhtoyarov.token_bucket_demo.part_2_distributed_token_bucket._2_ignite_async_token_bucket;
 
+import com.github.vladimir_bukhtoyarov.token_bucket_demo.part_2_distributed_token_bucket._2_ignite_async_token_bucket.remote.BucketState;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
@@ -20,7 +21,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class IgniteTokenBucketTest {
+public class IgniteAsyncTokenBucketTest {
+
+    private static final int WARMUP_SECONDS = 3;
 
     private static Cloud cloud;
     private static ViNode server;
@@ -30,36 +33,32 @@ public class IgniteTokenBucketTest {
         IgniteCache<String, BucketState> cache = createCache();
 
         // 100 tokens per 1 second
-        IgniteTokenBucket limiter = new IgniteTokenBucket("42",100L, Duration.ofMillis(10), cache);
+        IgniteAsyncTokenBucket limiter = new IgniteAsyncTokenBucket(100L, Duration.ofSeconds(1), "42", cache);
 
         AtomicLong consumed = new AtomicLong();
         AtomicLong rejected = new AtomicLong();
         initLogging(consumed, rejected);
 
-        for (int i = 0; i < 2; i++) {
-            new Thread(() -> {
-                while (true) {
-                    CompletableFuture<Boolean> resultFuture = limiter.tryConsume(1);
-                    resultFuture.whenComplete((consumptionResult, error) -> {
-                        if (error != null) {
-                            error.printStackTrace();
-                            return;
-                        }
-                        if (consumptionResult) {
-                            consumed.addAndGet(1);
-                        } else {
-                            rejected.addAndGet(1);
-                        }
-                    });
+        while (true) {
+            CompletableFuture<Boolean> resultFuture = limiter.tryAcquire(1);
+            resultFuture.whenComplete((consumptionResult, error) -> {
+                if (error != null) {
+                    error.printStackTrace();
+                    return;
                 }
-            }).start();
+                if (consumptionResult) {
+                    consumed.addAndGet(1);
+                } else {
+                    rejected.addAndGet(1);
+                }
+            });
         }
     }
 
     private static void initLogging(AtomicLong consumed, AtomicLong rejected) {
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             System.out.printf("Consumed %d, Rejected %d\n", consumed.getAndSet(0), rejected.getAndSet(0));
-        }, 0L, 1L, TimeUnit.SECONDS);
+        }, WARMUP_SECONDS, 1L, TimeUnit.SECONDS);
     }
 
     private static IgniteCache<String, BucketState> createCache() {

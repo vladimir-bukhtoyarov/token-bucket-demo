@@ -7,9 +7,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class LockFreeTokenBucketTest {
 
+    private static final int WARMUP_SECONDS = 3;
+
     public static void main(String[] args) throws InterruptedException {
         // 100 tokens per 1 second
-        LockFreeTokenBucket limiter = new LockFreeTokenBucket(100L, Duration.ofMillis(10));
+        LockFreeTokenBucket limiter = new LockFreeTokenBucket(100L, Duration.ofSeconds(1));
 
         AtomicLong consumed = new AtomicLong();
         AtomicLong rejected = new AtomicLong();
@@ -18,7 +20,7 @@ public class LockFreeTokenBucketTest {
         for (int i = 0; i < 2; i++) {
             new Thread(() -> {
                 while (true) {
-                    if (limiter.tryConsume(1)) {
+                    if (limiter.tryAcquire(1)) {
                         consumed.addAndGet(1);
                     } else {
                         rejected.addAndGet(1);
@@ -31,7 +33,7 @@ public class LockFreeTokenBucketTest {
     private static void initLogging(AtomicLong consumed, AtomicLong rejected) {
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             System.out.printf("Consumed %d, Rejected %d\n", consumed.getAndSet(0), rejected.getAndSet(0));
-        }, 0L, 1L, TimeUnit.SECONDS);
+        }, WARMUP_SECONDS, 1L, TimeUnit.SECONDS);
     }
 
 }

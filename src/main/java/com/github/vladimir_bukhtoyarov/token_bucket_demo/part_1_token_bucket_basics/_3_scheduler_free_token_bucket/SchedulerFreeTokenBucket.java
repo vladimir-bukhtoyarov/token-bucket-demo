@@ -1,29 +1,32 @@
 package com.github.vladimir_bukhtoyarov.token_bucket_demo.part_1_token_bucket_basics._3_scheduler_free_token_bucket;
 
+import com.github.vladimir_bukhtoyarov.token_bucket_demo.RateLimiter;
+
 import java.time.Duration;
 
-public class SchedulerFreeTokenBucket {
+public class SchedulerFreeTokenBucket implements RateLimiter {
 
     private final long capacity;
-    private final long nanosToGenerateToken;
-
     private long availableTokens;
+
+    private final long nanosToGenerateToken;
     private long lastRefillNanotime;
 
-    public SchedulerFreeTokenBucket(long capacity, Duration periodToGenerateOneToken) {
-        this.nanosToGenerateToken = periodToGenerateOneToken.toNanos();
+    public SchedulerFreeTokenBucket(long permits, Duration period) {
+        this.nanosToGenerateToken = period.toNanos() / permits;
         this.lastRefillNanotime = System.nanoTime();
 
-        this.capacity = capacity;
-        this.availableTokens = capacity;
+        this.capacity = permits;
+        this.availableTokens = permits;
     }
 
-    synchronized public boolean tryConsume(int numberTokens) {
+    @Override
+    synchronized public boolean tryAcquire(int permits) {
         refill();
-        if (availableTokens < numberTokens) {
+        if (availableTokens < permits) {
             return false;
         } else {
-            availableTokens -= numberTokens;
+            availableTokens -= permits;
             return true;
         }
     }

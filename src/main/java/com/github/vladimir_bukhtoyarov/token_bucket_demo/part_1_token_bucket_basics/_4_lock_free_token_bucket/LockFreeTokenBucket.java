@@ -1,9 +1,11 @@
 package com.github.vladimir_bukhtoyarov.token_bucket_demo.part_1_token_bucket_basics._4_lock_free_token_bucket;
 
+import com.github.vladimir_bukhtoyarov.token_bucket_demo.RateLimiter;
+
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class LockFreeTokenBucket {
+public class LockFreeTokenBucket implements RateLimiter {
 
     private final long capacity;
     private final long nanosToGenerateToken;
@@ -16,38 +18,37 @@ public class LockFreeTokenBucket {
 
     }
 
-    public LockFreeTokenBucket(long capacity, Duration periodToGenerateOneToken) {
-        this.nanosToGenerateToken = periodToGenerateOneToken.toNanos();
-        this.capacity = capacity;
+    public LockFreeTokenBucket(long permits, Duration period) {
+        this.nanosToGenerateToken = period.toNanos() / permits;
+        this.capacity = permits;
 
         State initialState = new State();
         initialState.lastRefillNanotime = System.nanoTime();
-        initialState.availableTokens = capacity;
+        initialState.availableTokens = permits;
 
         this.stateReference = new AtomicReference<>(initialState);
     }
 
-    public boolean tryConsume(int numberTokens) {
+    @Override
+    public boolean tryAcquire(int permits) {
         State newState = new State();
         while (true) {
+            long now = System.nanoTime();
             State previousState = stateReference.get();
             newState.availableTokens = previousState.availableTokens;
             newState.lastRefillNanotime = previousState.lastRefillNanotime;
-
-            refill(newState);
-
-            if (newState.availableTokens < numberTokens) {
+            refill(newState, now);
+            if (newState.availableTokens < permits) {
                 return false;
             }
-            newState.availableTokens -= numberTokens;
+            newState.availableTokens -= permits;
             if (stateReference.compareAndSet(previousState, newState)) {
                 return true;
             }
         }
     }
 
-    private void refill(State state) {
-        long now = System.nanoTime();
+    private void refill(State state, long now) {
         long nanosSinceLastRefill = now - state.lastRefillNanotime;
         if (nanosSinceLastRefill <= nanosToGenerateToken) {
             return;
