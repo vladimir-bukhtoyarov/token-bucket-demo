@@ -1,4 +1,4 @@
-package com.github.vladimir_bukhtoyarov.token_bucket_demo.part_2_distributed_token_bucket._1_ignite_token_bucket.remote;
+package com.github.vladimir_bukhtoyarov.token_bucket_demo.part_2_distributed_token_bucket._1_ignite_token_bucket;
 
 import java.io.Serializable;
 import java.time.Duration;

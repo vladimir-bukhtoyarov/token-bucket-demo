@@ -14,7 +14,7 @@ public class SimpleRateLimiter implements RateLimiter {
 
     private final long periodNanos;
     private long availablePermits;
-    private final LinkedList<IssuedPermits> issuedTokens = new LinkedList<>();
+    private final LinkedList<IssuedPermits> issuedPermits = new LinkedList<>();
 
     private static final class IssuedPermits {
         private final long permits;
@@ -27,27 +27,27 @@ public class SimpleRateLimiter implements RateLimiter {
     }
 
     @Override
-    synchronized public boolean tryAcquire(int numberTokens) {
+    synchronized public boolean tryAcquire(int permits) {
         long nanoTime = System.nanoTime();
         clearPreviouslyIssuedPermits(nanoTime);
 
-        if (availablePermits < numberTokens) {
+        if (availablePermits < permits) {
             // has no requested permits
             return false;
         } else {
             long expirationNanoTime = nanoTime + periodNanos;
-            issuedTokens.addLast(new IssuedPermits(numberTokens, expirationNanoTime));
-            availablePermits -= numberTokens;
+            issuedPermits.addLast(new IssuedPermits(permits, expirationNanoTime));
+            availablePermits -= permits;
             return true;
         }
     }
 
     private void clearPreviouslyIssuedPermits(long currentNanotime) {
-        while (!issuedTokens.isEmpty()) {
-            IssuedPermits issue = issuedTokens.getFirst();
+        while (!issuedPermits.isEmpty()) {
+            IssuedPermits issue = issuedPermits.getFirst();
             if (currentNanotime > issue.expirationNanotime) {
                 availablePermits += issue.permits;
-                issuedTokens.removeFirst();
+                issuedPermits.removeFirst();
             } else {
                 return;
             }
