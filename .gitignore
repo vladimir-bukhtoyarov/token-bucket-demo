@@ -90,5 +90,8 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
-/.idea/
-/token-bucket-demo.iml
+# IntelliJ Files
+.idea/
+*.ipr
+*.iws
+*.iml

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>distributed-token-bucket-apache-ignite-demo</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <parent>
+        <groupId>com.github.vladimir-bukhtoyarov</groupId>
+        <artifactId>token-bucket-demos</artifactId>
+        <relativePath>../</relativePath>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <name>Live Demo for distributed token bucket based on top of Apache Ignite</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-core</artifactId>
+            <version>2.8.0</version>
+        </dependency>
+
+        <!-- aux dependencies -->
+        <dependency>
+            <groupId>org.gridkit.lab</groupId>
+            <artifactId>nanocloud</artifactId>
+            <version>0.8.16</version>
+        </dependency>
+    </dependencies>
+
+</project>
