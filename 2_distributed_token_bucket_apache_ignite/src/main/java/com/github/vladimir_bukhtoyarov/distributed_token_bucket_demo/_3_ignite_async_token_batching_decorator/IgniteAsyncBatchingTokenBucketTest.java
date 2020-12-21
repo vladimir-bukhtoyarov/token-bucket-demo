@@ -1,7 +1,7 @@
-package com.github.vladimir_bukhtoyarov.distributed_token_bucket_demo._2_ignite_async_token_bucket;
+package com.github.vladimir_bukhtoyarov.distributed_token_bucket_demo._3_ignite_async_token_batching_decorator;
 
 import com.codahale.metrics.Meter;
-import com.github.vladimir_bukhtoyarov.distributed_token_bucket_demo._2_ignite_async_token_bucket.remote.BucketState;
+import com.github.vladimir_bukhtoyarov.distributed_token_bucket_demo._3_ignite_async_token_batching_decorator.remote.BucketState;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
@@ -23,7 +23,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class IgniteAsyncTokenBucketTest {
+public class IgniteAsyncBatchingTokenBucketTest {
 
     private static final int WARMUP_SECONDS = 3;
 
@@ -35,7 +35,7 @@ public class IgniteAsyncTokenBucketTest {
         IgniteCache<String, BucketState> cache = createCache();
 
         // 100 tokens per 1 second
-        IgniteAsyncTokenBucket limiter = new IgniteAsyncTokenBucket(100L, Duration.ofSeconds(1), "42", cache);
+        IgniteAsyncBatchingTokenBucket limiter = new IgniteAsyncBatchingTokenBucket(100L, Duration.ofSeconds(1), "42", cache);
 
         Meter requestRateMeter = new Meter();
         AtomicLong consumed = new AtomicLong();

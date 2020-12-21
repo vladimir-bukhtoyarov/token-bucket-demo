@@ -93,6 +93,21 @@ public class BatchHelper<T, R, CT, CR> {
         return new BatchHelper<T, R, CT, CR>(taskCombiner, UNSUPPORTED, UNSUPPORTED, asyncCombinedTaskExecutor, asyncTaskExecutor, combinedResultSplitter);
     }
 
+    public static <T, R> BatchHelper<T, R, List<T>, List<R>> async(Function<List<T>, CompletableFuture<List<R>>> asyncCombinedTaskExecutor) {
+        Function<T, CompletableFuture<R>> asyncTaskExecutor = new Function<T, CompletableFuture<R>>() {
+            @Override
+            public CompletableFuture<R> apply(T task) {
+                List<T> combinedTask = Collections.singletonList(task);
+                CompletableFuture<List<R>> resultFuture = asyncCombinedTaskExecutor.apply(combinedTask);
+                return resultFuture.thenApply((List<R> combinedResult) -> combinedResult.get(0));
+            }
+        };
+        Function<List<T>, List<T>> taskCombiner = tasks -> tasks;
+        Function<List<R>, List<R>> combinedResultSplitter = results -> results;
+
+        return new BatchHelper<T, R, List<T>, List<R>>(taskCombiner, UNSUPPORTED, UNSUPPORTED, asyncCombinedTaskExecutor, asyncTaskExecutor, combinedResultSplitter);
+    }
+
     private BatchHelper(Function<List<T>, CT> taskCombiner,
                         Function<CT, CR> combinedTaskExecutor,
                         Function<T, R> taskExecutor,
