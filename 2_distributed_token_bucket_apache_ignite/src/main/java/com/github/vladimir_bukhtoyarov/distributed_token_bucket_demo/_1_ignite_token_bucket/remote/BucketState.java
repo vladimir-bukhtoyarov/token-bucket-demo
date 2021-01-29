@@ -1,29 +1,28 @@
 package com.github.vladimir_bukhtoyarov.distributed_token_bucket_demo._1_ignite_token_bucket.remote;
 
-import java.io.Serializable;
-
-public final class BucketState implements Serializable {
+public final class BucketState {
 
     long availableTokens;
-    long lastRefillNanotime;
+    long lastRefillNanoTime;
 
-    public BucketState(long availableTokens, long lastRefillNanotime) {
-        this.availableTokens = availableTokens;
-        this.lastRefillNanotime = lastRefillNanotime;
+    public BucketState(BucketParams params, long nanoTime) {
+        this.lastRefillNanoTime = nanoTime;
+        this.availableTokens = params.capacity;
     }
 
-    public BucketState copy() {
-        return new BucketState(availableTokens, lastRefillNanotime);
+    public BucketState(BucketState other) {
+        this.lastRefillNanoTime = other.lastRefillNanoTime;
+        this.availableTokens = other.availableTokens;
     }
 
-    public void refill(BucketParams params, long now) {
-        long nanosSinceLastRefill = now - lastRefillNanotime;
+    public void refill(BucketParams params, long nanoTime) {
+        long nanosSinceLastRefill = nanoTime - this.lastRefillNanoTime;
         if (nanosSinceLastRefill <= params.nanosToGenerateToken) {
             return;
         }
         long tokensSinceLastRefill = nanosSinceLastRefill / params.nanosToGenerateToken;
         availableTokens = Math.min(params.capacity, availableTokens + tokensSinceLastRefill);
-        lastRefillNanotime += tokensSinceLastRefill * params.nanosToGenerateToken;
+        lastRefillNanoTime += tokensSinceLastRefill * params.nanosToGenerateToken;
     }
 
 }

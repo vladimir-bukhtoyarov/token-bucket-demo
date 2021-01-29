@@ -6,25 +6,26 @@ import javax.cache.processor.MutableEntry;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+
+
+
+
+
+
+
+
 
 public class BatchAcquireProcessor implements Serializable, EntryProcessor<String, BucketState, List<Boolean>> {
-
     @Override
-    public List<Boolean> process(MutableEntry<String, BucketState> entry, Object... arguments) throws EntryProcessorException {
+    public List<Boolean> process(MutableEntry<String, BucketState> entry, Object... arguments)
+            throws EntryProcessorException {
         final List<Long> tryConsumeCommands = (List<Long>) arguments[0];
         final BucketParams params = (BucketParams) arguments[1];
-        long now = System.currentTimeMillis() * 1_000_000L;
-
-        BucketState state;
-        if (!entry.exists()) {
-            state = new BucketState(params.capacity, System.currentTimeMillis() * 1_000_000L);
-        } else {
-            BucketState persistedState = entry.getValue();
-            state = persistedState.copy();
-            state.refill(params, now);
-        }
-
-        // Execute batch
+        long nanoTime = TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
+        BucketState state = entry.exists() ? new BucketState(entry.getValue()) : new BucketState(params, nanoTime);
+        state.refill(params, nanoTime);
         List<Boolean> results = new ArrayList<>(tryConsumeCommands.size());
         long consumedTokens = 0;
         for (Long tokensToConsume : tryConsumeCommands) {
@@ -36,13 +37,16 @@ public class BatchAcquireProcessor implements Serializable, EntryProcessor<Strin
                 consumedTokens += tokensToConsume;
             }
         }
-
-        // save results if something was consumed
         if (consumedTokens > 0) {
             entry.setValue(state);
         }
-
         return results;
     }
-
 }
+
+
+
+
+
+
+

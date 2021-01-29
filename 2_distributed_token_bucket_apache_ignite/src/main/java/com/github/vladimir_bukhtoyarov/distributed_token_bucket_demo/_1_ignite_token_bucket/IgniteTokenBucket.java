@@ -13,8 +13,8 @@ public class IgniteTokenBucket implements RateLimiter {
     private final IgniteCache<String, BucketState> cache;
     private final String key;
 
-    public IgniteTokenBucket(long permits, Duration period,
-             String key, IgniteCache<String, BucketState> cache) {
+    public IgniteTokenBucket(long permits, Duration period, String key,
+                             IgniteCache<String, BucketState> cache) {
         this.bucketParams = new BucketParams(permits, period);
         this.key = key;
         this.cache = cache;
@@ -27,3 +27,9 @@ public class IgniteTokenBucket implements RateLimiter {
     }
 
 }
+
+
+
+
+
+
