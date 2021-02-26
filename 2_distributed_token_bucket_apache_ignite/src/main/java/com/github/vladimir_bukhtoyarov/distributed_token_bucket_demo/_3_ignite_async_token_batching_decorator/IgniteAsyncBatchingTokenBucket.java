@@ -18,14 +18,11 @@ public class IgniteAsyncBatchingTokenBucket {
     private final IgniteCache<String, BucketState> cache;
     private final String key;
 
-    private final BatchHelper<Long, Boolean, List<Long>, List<Boolean>> batchHelper = BatchHelper.async(this::invokeBatch);
+    private final BatchHelper<Long, Boolean, List<Long>, List<Boolean>> batchHelper =
+            BatchHelper.async(this::invokeBatch);
 
-    private CompletableFuture<List<Boolean>> invokeBatch(List<Long> commands) {
-        IgniteFuture<List<Boolean>> future = cache.invokeAsync(key, new BatchAcquireProcessor(), commands, bucketParams);
-        return convertFuture(future);
-    }
-
-    public IgniteAsyncBatchingTokenBucket(long permits, Duration period, String key, IgniteCache<String, BucketState> cache) {
+    public IgniteAsyncBatchingTokenBucket(long permits, Duration period, String key,
+                                          IgniteCache<String, BucketState> cache) {
         this.bucketParams = new BucketParams(permits, period);
         this.key = key;
         this.cache = cache;
@@ -33,6 +30,11 @@ public class IgniteAsyncBatchingTokenBucket {
 
     public CompletableFuture<Boolean> tryAcquire(long numberTokens) {
         return batchHelper.executeAsync(numberTokens);
+    }
+
+    private CompletableFuture<List<Boolean>> invokeBatch(List<Long> commands) {
+        IgniteFuture<List<Boolean>> future = cache.invokeAsync(key, new BatchAcquireProcessor(), commands, bucketParams);
+        return convertFuture(future);
     }
 
     private static <T> CompletableFuture<T> convertFuture(IgniteFuture<T> igniteFuture) {
